@@ -119,7 +119,7 @@ class MetricLoss(nn.Module):
         src_gt[src_idx]=1.
         tgt_gt = torch.zeros(tgt_pcd.size(0))
         tgt_gt[tgt_idx]=1.
-        gt_labels = torch.cat((src_gt, tgt_gt)).to(torch.device('cuda'))
+        gt_labels = torch.cat((src_gt, tgt_gt)).to(torch.device('cpu')) # TODO HACK
 
         class_loss, cls_precision, cls_recall = self.get_weighted_bce_loss(scores_overlap, gt_labels)
         stats['overlap_loss'] = class_loss

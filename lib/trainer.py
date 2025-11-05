@@ -48,7 +48,7 @@ class Trainer(object):
         
         self.loader =dict()
         self.loader['train']=args.train_loader
-        self.loader['val']=args.val_loader
+        # self.loader['val']=args.val_loader
         self.loader['test'] = args.test_loader
 
         with open(f'{args.snapshot_dir}/model','w') as f:

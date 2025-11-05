@@ -1,0 +1,12 @@
+set python interpreter to "geotransformer" env
+"conda deactivate" several times followed by "conda activate geotransformer"
+
+To copy data from PASTA folder
+cp -r /mnt/d/lidar_experiments/pasta2d-main/data/clouds ~/OverlapPredator/pasta_data
+
+set source and destination files in "configs/test/pasta_test.yaml" under "demo"
+e.g. "/mnt/d/lidar_experiments/pasta2d-main/data/tsfms/traj_fast.npy"
+
+
+run:
+python scripts/get_tsfm.py configs/test/pasta_test.yaml

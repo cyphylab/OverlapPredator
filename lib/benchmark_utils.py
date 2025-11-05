@@ -191,7 +191,7 @@ def ransac_pose_estimation(src_pcd, tgt_pcd, src_feat, tgt_feat, mutual = False,
     For 3DMatch dataset, we observe significant improvement after changing ransac_n from 4 to 3.
     """
     if(mutual):
-        if(torch.cuda.device_count()>=1):
+        if(False): #torch.cuda.device_count()>=1): TODO
             device = torch.device('cuda')
         else:
             device = torch.device('cpu')
@@ -237,7 +237,7 @@ def get_inlier_ratio(src_pcd, tgt_pcd, src_feat, tgt_feat, rot, trans, inlier_di
     results['w']=dict()
     results['wo']=dict()
 
-    if(torch.cuda.device_count()>=1):
+    if(False): #torch.cuda.device_count()>=1): TODO
         device = torch.device('cuda')
     else:
         device = torch.device('cpu')

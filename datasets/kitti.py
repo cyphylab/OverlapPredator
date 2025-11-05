@@ -23,7 +23,8 @@ class KITTIDataset(Dataset):
     def __init__(self,config,split,data_augmentation=True):
         super(KITTIDataset,self).__init__()
         self.config = config
-        self.root = os.path.join(config.root,'dataset')
+        print(config.root)
+        self.root = config.root#os.path.join(config.root,'dataset')
         self.icp_path = os.path.join(config.root,'icp')
         if not os.path.exists(self.icp_path):
             os.makedirs(self.icp_path)
@@ -51,7 +52,8 @@ class KITTIDataset(Dataset):
         subset_names = open(self.DATA_FILES[split]).read().split()
         for dirname in subset_names:
             drive_id = int(dirname)
-            fnames = glob.glob(self.root + '/sequences/%02d/velodyne/*.bin' % drive_id)
+            print(self.root, drive_id)
+            fnames = glob.glob(self.root + f'/sequences/{drive_id:02d}/velodyne/*.bin')
             assert len(fnames) > 0, f"Make sure that the path {self.root} has data {dirname}"
             inames = sorted([int(os.path.split(fname)[-1][:-4]) for fname in fnames])
 

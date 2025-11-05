@@ -28,7 +28,8 @@ class IndoorTester(Trainer):
         self.model.eval()
         with torch.no_grad():
             for idx in tqdm(range(num_iter)): # loop through this epoch
-                inputs = c_loader_iter.next()
+                #inputs = c_loader_iter.next()
+                inputs = next(c_loader_iter)
                 ##################################
                 # load inputs to device.
                 for k, v in inputs.items():  
@@ -77,7 +78,8 @@ class KITTITester(Trainer):
         rot_gt, trans_gt =[],[]
         with torch.no_grad():
             for _ in tqdm(range(num_iter)): # loop through this epoch
-                inputs = c_loader_iter.next()
+                #inputs = c_loader_iter.next()
+                inputs = next(c_loader_iter)
                 ###############################################
                 # forward pass
                 for k, v in inputs.items():  
@@ -85,8 +87,9 @@ class KITTITester(Trainer):
                         inputs[k] = [item.to(self.device) for item in v]
                     else:
                         inputs[k] = v.to(self.device)
-
+                # print([k for k in inputs.keys()])
                 feats, scores_overlap, scores_saliency = self.model(inputs)  #[N1, C1], [N2, C2]
+                # print("FEATS", feats.shape)
                 scores_overlap = scores_overlap.detach().cpu()
                 scores_saliency = scores_saliency.detach().cpu()
 
@@ -95,6 +98,7 @@ class KITTITester(Trainer):
                 rot_gt.append(c_rot.cpu().numpy())
                 trans_gt.append(c_trans.cpu().numpy())
                 src_feats, tgt_feats = feats[:len_src], feats[len_src:]
+                # print(src_feats.shape, tgt_feats.shape)
                 src_pcd , tgt_pcd = inputs['src_pcd_raw'], inputs['tgt_pcd_raw']
                 src_overlap, tgt_overlap = scores_overlap[:len_src], scores_overlap[len_src:]
                 src_saliency, tgt_saliency = scores_saliency[:len_src], scores_saliency[len_src:]

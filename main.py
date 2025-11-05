@@ -33,8 +33,8 @@ if __name__ == '__main__':
         open(os.path.join(config.snapshot_dir, 'config.json'), 'w'),
         indent=4,
     )
-    if config.gpu_mode:
-        config.device = torch.device('cuda')
+    if False: # TODO config.gpu_mode:
+        config.device = torch.device('cuda:0')
     else:
         config.device = torch.device('cpu')
     
@@ -78,12 +78,12 @@ if __name__ == '__main__':
                                         shuffle=True,
                                         num_workers=config.num_workers,
                                         )
-    config.val_loader, _ = get_dataloader(dataset=val_set,
-                                        batch_size=config.batch_size,
-                                        shuffle=False,
-                                        num_workers=1,
-                                        neighborhood_limits=neighborhood_limits
-                                        )
+    # config.val_loader, _ = get_dataloader(dataset=val_set,
+    #                                     batch_size=config.batch_size,
+    #                                     shuffle=False,
+    #                                     num_workers=1,
+    #                                     neighborhood_limits=neighborhood_limits
+    #                                     )
     config.test_loader, _ = get_dataloader(dataset=benchmark_set,
                                         batch_size=config.batch_size,
                                         shuffle=False,

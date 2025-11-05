@@ -140,26 +140,34 @@ class KPFCNN(nn.Module):
         len_src_f = batch['stack_lengths'][0][0]
         pcd_c = batch['points'][-1]
         pcd_f = batch['points'][0]
+        # print('pcd_c, pcd_f', pcd_c.shape, pcd_f.shape)
         src_pcd_c, tgt_pcd_c = pcd_c[:len_src_c], pcd_c[len_src_c:]
 
         sigmoid = nn.Sigmoid()
         #################################
         # 1. joint encoder part
+        # print("x", x.shape)
         skip_x = []
         for block_i, block_op in enumerate(self.encoder_blocks):
             if block_i in self.encoder_skips:
                 skip_x.append(x)
             x = block_op(x, batch)
+        # print("x", x.shape)
         
         #################################
         # 2. project the bottleneck features
         feats_c = x.transpose(0,1).unsqueeze(0)  #[1, C, N]
+        # print("feats_c", feats_c.shape)
         feats_c = self.bottle(feats_c)  #[1, C, N]
+        # print("feats_c", feats_c.shape)
         unconditioned_feats = feats_c.transpose(1,2).squeeze(0)
+        # print("unconditioned feats", unconditioned_feats.shape)
 
         #################################
         # 3. apply GNN to communicate the features and get overlap score
+        # print('feats_c', feats_c.shape)
         src_feats_c, tgt_feats_c = feats_c[:,:,:len_src_c], feats_c[:,:,len_src_c:]
+        # print("WHEEE", src_feats_c.shape, tgt_feats_c.shape)
         src_feats_c, tgt_feats_c= self.gnn(src_pcd_c.unsqueeze(0).transpose(1,2), tgt_pcd_c.unsqueeze(0).transpose(1,2),src_feats_c, tgt_feats_c)
         feats_c = torch.cat([src_feats_c, tgt_feats_c], dim=-1)
 
