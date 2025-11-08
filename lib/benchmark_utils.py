@@ -290,8 +290,8 @@ def mutual_selection(score_mat):
         max_along_column=np.argmax(c_mat,0)[None,:]
         np.put_along_axis(flag_row,max_along_row,1,1)
         np.put_along_axis(flag_column,max_along_column,1,0)
-        mutuals[i]=(flag_row.astype(np.bool)) & (flag_column.astype(np.bool))
-    return mutuals.astype(np.bool)  
+        mutuals[i]=(flag_row.astype(bool)) & (flag_column.astype(bool))
+    return mutuals.astype(bool)  
 
 
 def get_scene_split(whichbenchmark):

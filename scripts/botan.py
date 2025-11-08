@@ -10,6 +10,7 @@ from easydict import EasyDict as edict
 from torch.utils.data import Dataset
 from torch import optim, nn
 import open3d as o3d
+import json
 
 cwd = os.getcwd()
 sys.path.append(cwd)
@@ -23,8 +24,9 @@ from lib.loss import MetricLoss
 import shutil
 setup_seed(0)
 
+DATA_DIR = "custom_data/normalized_botanical/"
 
-class ThreeDMatchTest(Dataset):
+class CustomDataset(Dataset):
     """
     Load subsampled coordinates, relative rotation and translation
     Output(torch.Tensor):
@@ -33,29 +35,30 @@ class ThreeDMatchTest(Dataset):
         rot:            [3,3]
         trans:          [3,1]
     """
-    def __init__(self,config, test_path):
-        super(ThreeDMatchTest,self).__init__()
+    def __init__(self,config):
+        super(CustomDataset,self).__init__()
         self.config = config
-        self.test_path = test_path
+
+        self.offset = 500
+        self.step = 50
+
+        self.test_path = DATA_DIR
+
+        frame_dict = {"offset":self.offset, "step":self.step}
+        with open(DATA_DIR+"idx_info.json", "w") as f:
+            json.dump(frame_dict, f)
+            print("Wrote index info to", DATA_DIR+"idx_info.json")
 
     def __len__(self):
-        return 59
+        return len(np.arange(self.offset, 3879, self.step))
 
     def __getitem__(self, idx): 
 
-        src_file = "cloud_bin_" + str(idx)+".pth"
-        tgt_file = "cloud_bin_" + str(idx+1)+".pth"
+        src_file = self.test_path+"clouds/cloud_" + str(self.offset + self.step*idx)+".npy"
+        tgt_file = self.test_path+"clouds/cloud_" + str(self.offset + self.step*(idx+1))+".npy"
         # get pointcloud
-        src_pcd = torch.load(self.test_path+src_file).astype(np.float32)
-        tgt_pcd = torch.load(self.test_path+tgt_file).astype(np.float32)   
-        
-        
-        #src_pcd = o3d.io.read_point_cloud(self.src_path)
-        #tgt_pcd = o3d.io.read_point_cloud(self.tgt_path)
-        #src_pcd = src_pcd.voxel_down_sample(0.025)
-        #tgt_pcd = tgt_pcd.voxel_down_sample(0.025)
-        #src_pcd = np.array(src_pcd.points).astype(np.float32)
-        #tgt_pcd = np.array(tgt_pcd.points).astype(np.float32)
+        src_pcd = np.load(src_file)
+        tgt_pcd = np.load(tgt_file)
 
 
         src_feats=np.ones_like(src_pcd[:,:1]).astype(np.float32)
@@ -72,9 +75,9 @@ class ThreeDMatchTest(Dataset):
 def main(config, demo_loader):
     config.model.eval()
     c_loader_iter = demo_loader.__iter__()
-    tsfms = np.zeros((len(demo_loader), 4, 4))
+    tsfms = np.zeros((len(demo_loader)-1, 4, 4))
     with torch.no_grad():
-        for i in range(len(demo_loader)):
+        for i in range(len(demo_loader)-1):
             inputs = next(c_loader_iter)
             ##################################
             # load inputs to device.
@@ -119,8 +122,8 @@ def main(config, demo_loader):
             # run ransac and draw registration
             tsfm = ransac_pose_estimation(src_pcd, tgt_pcd, src_feats, tgt_feats, mutual=False)
             tsfms[i] = tsfm
-            print(f"Computed {i} of {len(demo_loader)}")
-        np.save("data/tests/lag_1-3dmatch.npy", tsfms)
+            print(f"Matched {i}, {i+1} of {len(demo_loader)}")
+        np.save(DATA_DIR+"pred_op.npy", tsfms)
 
 
 if __name__ == '__main__':
@@ -150,14 +153,12 @@ if __name__ == '__main__':
     config.architecture.append('nearest_upsample')
     config.architecture.append('last_unary')
     config.model = KPFCNN(config).to(config.device)
-
-    test_path = "data/indoor/test/7-scenes-redkitchen/"
     
     # create dataset and dataloader
     info_train = load_obj(config.train_info)
     train_set = IndoorDataset(info_train,config,data_augmentation=True)
 
-    demo_set = ThreeDMatchTest(config, test_path)
+    demo_set = CustomDataset(config)
 
 
     _, neighborhood_limits = get_dataloader(dataset=train_set,
